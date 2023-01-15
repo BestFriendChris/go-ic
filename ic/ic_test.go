@@ -227,8 +227,8 @@ func TestIC_PrintVals(t *testing.T) {
 			baz: struct { A float32; b bool }{A:2.1, b:false}
 			A: 1
 			B: 999
-			D: "foo"
-			E: "baz"
+			testStruct.D: "foo"
+			testStruct.E: "baz"
 			`)
 }
 

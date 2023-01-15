@@ -137,6 +137,9 @@ func (ic *IC) PrintVals(val any) {
 		field := valType.Field(i)
 		if field.IsExported() {
 			name := field.Name
+			if valType.Name() != "" {
+				name = fmt.Sprintf("%s.%s", valType.Name(), name)
+			}
 			value := s.Field(i).Interface()
 			ic.PrintValWithName(name, value)
 		}
