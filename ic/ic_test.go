@@ -198,14 +198,14 @@ func TestIC_PrintVals(t *testing.T) {
 	c.PrintValWithName("foo", foo)
 
 	bar := "hi\nthere"
-	// Aliased as for PrintValWithName
-	c.PVwN("bar", bar)
+	// Aliased for PrintValWithName
+	c.PVWN("bar", bar)
 
 	baz := struct {
 		A float32
 		b bool
 	}{2.1, false}
-	c.PVwN("baz", baz)
+	c.PVWN("baz", baz)
 
 	// Anonymous struct
 	c.PrintVals(struct{ A, ignored, B int }{1, 2, 999})
@@ -214,7 +214,7 @@ func TestIC_PrintVals(t *testing.T) {
 	type testStruct struct {
 		D, ignored, E string
 	}
-	// Aliased as for PrintVals
+	// Aliased for PrintVals
 	c.PV(testStruct{
 		D:       "foo",
 		ignored: "bar",
@@ -237,12 +237,12 @@ func TestIC_Replace(t *testing.T) {
 
 	c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
 
-	c.PVwN("now", time.Now().Format(time.RFC3339))
+	c.PVWN("now", time.Now().Format(time.RFC3339))
 	c.Expect(`
 			now: "1970-01-01T00:00:00-00:00"
 			`)
 
-	c.PVwN("later", time.Now().Format(time.RFC3339))
+	c.PVWN("later", time.Now().Format(time.RFC3339))
 	c.Expect(`
 			later: "1970-01-01T00:00:00-00:00"
 			`)
@@ -253,7 +253,7 @@ func TestIC_ClearReplace(t *testing.T) {
 
 	c.Replace(`foo`, "bar")
 
-	c.PVwN("first", "foo-bar")
+	c.PVWN("first", "foo-bar")
 	c.Expect(`
 			first: "bar-bar"
 			`)
@@ -261,7 +261,7 @@ func TestIC_ClearReplace(t *testing.T) {
 	c.ClearReplace()
 	c.Replace(`bar`, "baz")
 
-	c.PVwN("second", "foo-bar")
+	c.PVWN("second", "foo-bar")
 	c.Expect(`
 			second: "foo-baz"
 			`)
@@ -302,8 +302,8 @@ func TestIC_replaceOnEmpty_1(t *testing.T) {
 
 	c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
 
-	c.PVwN("foo", 1)
-	c.PVwN("bar", time.Now().Format(time.RFC3339))
+	c.PVWN("foo", 1)
+	c.PVWN("bar", time.Now().Format(time.RFC3339))
 
 	c.Expect(``)
 }

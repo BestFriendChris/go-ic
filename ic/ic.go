@@ -147,8 +147,8 @@ func (ic *IC) PrintVals(val any) {
 	}
 }
 
-// PVwN is an alias for PrintValWithName
-func (ic *IC) PVwN(name string, val any) {
+// PVWN is an alias for PrintValWithName
+func (ic *IC) PVWN(name string, val any) {
 	ic.PrintValWithName(name, val)
 }
 
