@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/pmezard/go-difflib/difflib"
@@ -19,8 +20,9 @@ func NewNullable() (IC, *NullTester) {
 }
 
 type IC struct {
-	t      Tester
-	Writer bytes.Buffer
+	t            Tester
+	Writer       bytes.Buffer
+	replacements []replacement
 }
 
 func (ic *IC) Print(output ...any) {
@@ -63,6 +65,9 @@ func (ic *IC) ExpectAndContinue(want string) {
 
 func (ic *IC) expectAndLog(want string) (isSame bool) {
 	got := trim(ic.Writer.String())
+	for _, rp := range ic.replacements {
+		got = rp.replace(got)
+	}
 	trimmedWant := trim(want)
 	isSame = got == trimmedWant
 	if !isSame {
@@ -106,4 +111,27 @@ func (ic *IC) PrintVals(val any) {
 
 func (ic *IC) PrintValWithName(name string, val any) {
 	ic.Printf("%s: %#v\n", name, val)
+}
+
+func (ic *IC) Replace(regex string, repl string) {
+	re, err := regexp.Compile(regex)
+	if err != nil {
+		ic.t.Helper()
+		ic.t.Log(err)
+		ic.t.FailNow()
+	}
+	ic.replacements = append(ic.replacements, replacement{re, []byte(repl)})
+}
+
+func (ic *IC) ClearReplace() {
+	ic.replacements = ic.replacements[:0]
+}
+
+type replacement struct {
+	re   *regexp.Regexp
+	repl []byte
+}
+
+func (r replacement) replace(s string) string {
+	return string(r.re.ReplaceAll([]byte(s), r.repl))
 }

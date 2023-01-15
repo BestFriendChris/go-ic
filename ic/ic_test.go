@@ -4,6 +4,7 @@ import (
 	"go-ic/ic"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestIC_Expect_simple(t *testing.T) {
@@ -147,4 +148,40 @@ func TestIC_PrintVals(t *testing.T) {
 			D: "foo"
 			E: "baz"
 			`)
+}
+
+func TestIC_Replace(t *testing.T) {
+	c := ic.New(t)
+
+	c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
+
+	c.PrintValWithName("now", time.Now().Format(time.RFC3339))
+	c.Expect(`
+			now: "1970-01-01T00:00:00-00:00"
+			`)
+
+	c.PrintValWithName("later", time.Now().Format(time.RFC3339))
+	c.Expect(`
+			later: "1970-01-01T00:00:00-00:00"
+			`)
+}
+
+func TestIC_ClearReplace(t *testing.T) {
+	c := ic.New(t)
+
+	c.Replace(`foo`, "bar")
+
+	c.PrintValWithName("first", "foo-bar")
+	c.Expect(`
+			first: "bar-bar"
+			`)
+
+	c.ClearReplace()
+	c.Replace(`bar`, "baz")
+
+	c.PrintValWithName("second", "foo-bar")
+	c.Expect(`
+			second: "foo-baz"
+			`)
+
 }
