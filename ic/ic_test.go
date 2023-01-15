@@ -28,6 +28,15 @@ func TestIC_Expect_trimInput(t *testing.T) {
 		bar`)
 }
 
+func TestIC_Expect_multiple(t *testing.T) {
+	c := ic.New(t)
+	c.Print("foo")
+	c.Expect(`foo`)
+
+	c.Print("bar")
+	c.Expect(`bar`)
+}
+
 func TestIC_Expect_fail(t *testing.T) {
 	c, nt := ic.NewNullable()
 	c.Print("this will succeed")

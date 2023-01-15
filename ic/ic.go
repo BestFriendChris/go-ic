@@ -80,5 +80,6 @@ func (ic *IC) expectAndLog(want string) (isSame bool) {
 			ic.t.Logf("\ngot  %q\nwant %q", got, trimmedWant)
 		}
 	}
+	ic.Writer.Truncate(0)
 	return
 }
