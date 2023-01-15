@@ -268,6 +268,34 @@ func TestIC_ClearReplace(t *testing.T) {
 
 }
 
+func TestIC_PrintSep(t *testing.T) {
+	c := ic.New(t)
+
+	tests := []struct {
+		Name       string
+		Have, Want int
+	}{
+		{`Simple add`, 1 + 2, 3},
+		{`Simple subtract`, 10 - 3, 7},
+	}
+	c.PrintSep()
+	for _, test := range tests {
+		c.PV(test)
+		c.PS() // Alias for PrintSep
+	}
+	c.Expect(`
+		--------------------------------------------------------------------------------
+		Name: "Simple add"
+		Have: 3
+		Want: 3
+		--------------------------------------------------------------------------------
+		Name: "Simple subtract"
+		Have: 7
+		Want: 7
+		--------------------------------------------------------------------------------
+		`)
+}
+
 func TestIC_replaceOnEmpty_1(t *testing.T) {
 	t.Skip("example of updating the test file")
 	c := ic.New(t)

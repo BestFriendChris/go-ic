@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/pmezard/go-difflib/difflib"
@@ -154,6 +155,16 @@ func (ic *IC) PVwN(name string, val any) {
 // PrintValWithName is a simple formatter for testing values
 func (ic *IC) PrintValWithName(name string, val any) {
 	ic.Printf("%s: %#v\n", name, val)
+}
+
+func (ic *IC) PS() {
+	ic.PrintSep()
+}
+
+var separator = strings.Repeat("-", 80)
+
+func (ic *IC) PrintSep() {
+	ic.Println(separator)
 }
 
 // Replace can be used to run a regexp.ReplaceAll on the output before comparison
