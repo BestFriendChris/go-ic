@@ -9,3 +9,8 @@ type Tester interface {
 	Logf(format string, args ...any)
 	Helper()
 }
+
+type TestFileUpdater interface {
+	UpdateEnabled() bool
+	Update(ic *IC, got string)
+}

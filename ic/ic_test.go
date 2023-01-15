@@ -1,7 +1,7 @@
 package ic_test
 
 import (
-	"go-ic/ic"
+	"github.com/BestFriendChris/go-ic/ic"
 	"reflect"
 	"testing"
 	"time"
@@ -29,7 +29,7 @@ func TestIC_Expect_trimInput(t *testing.T) {
 		bar`)
 }
 
-func TestIC_Expect_multiple(t *testing.T) {
+func TestIC_Expect_clearOutputAfterExpect(t *testing.T) {
 	c := ic.New(t)
 	c.Print("foo")
 	c.Expect(`foo`)
@@ -51,11 +51,15 @@ func TestIC_Expect_fail(t *testing.T) {
 		t.Error("Expected this to have exited the test")
 	}
 
-	want := []string{`
-got  "this will succeed"
-want "this will fail"`}
-	if !reflect.DeepEqual(nt.Output, want) {
-		t.Errorf("got %v want %v", nt.Output, want)
+	want := `
+ got: "this will succeed"
+want: "this will fail"`
+	if len(nt.Output) != 1 {
+		t.Fatalf("got %d elements, want 1 element in:\n%#v", len(nt.Output), nt.Output)
+	}
+	got := nt.Output[0]
+	if got != want {
+		t.Errorf("\ngot %v\n\nwant %v", got, want)
 	}
 }
 
@@ -72,11 +76,16 @@ func TestIC_ExpectAndContinue_fail(t *testing.T) {
 		t.Error("Expected this to NOT have exited the test")
 	}
 
-	want := []string{`
-got  "this will succeed"
-want "this will fail"`}
-	if !reflect.DeepEqual(nt.Output, want) {
-		t.Errorf("got %v want %v", nt.Output, want)
+	want := `
+ got: "this will succeed"
+want: "this will fail"`
+
+	if len(nt.Output) != 1 {
+		t.Fatalf("got %d elements, want 1 element in:\n%#v", len(nt.Output), nt.Output)
+	}
+	got := nt.Output[0]
+	if got != want {
+		t.Errorf("\ngot %v\n\nwant %v", got, want)
 	}
 }
 
@@ -94,12 +103,12 @@ func TestIC_Expect_failWithMultipleLines(t *testing.T) {
 	}
 
 	want := `
---- Want
-+++ Got
+--- Got
++++ Want
 @@ -1,3 +1,3 @@
  this will
--fail
-+succeed
+-succeed
++fail
  
 `
 	if len(nt.Output) != 1 {
@@ -111,6 +120,77 @@ func TestIC_Expect_failWithMultipleLines(t *testing.T) {
 	}
 }
 
+func TestIC_Expect_whenEmptyLines_updateEnabled(t *testing.T) {
+	c, nt := ic.NewNullable()
+	nt.IsUpdateEnabled = true
+
+	c.Println("this will fail")
+	c.Expect(``)
+
+	if !nt.Failed {
+		t.Error("Expected this to fail")
+	}
+
+	want := `IC: Updating test file. Rerun tests to verify
+`
+	if len(nt.Output) != 2 {
+		t.Fatalf("got %d elements, want 2 elements in:\n%#v", len(nt.Output), nt.Output)
+	}
+	got := nt.Output[1]
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("\n got: %q\nwant: %q", got, want)
+	}
+}
+
+func TestIC_Expect_whenEmptyLines_updateDisabled(t *testing.T) {
+	c, nt := ic.NewNullable()
+	nt.IsUpdateEnabled = false
+
+	c.Println("this will")
+	c.Println("fail")
+	c.Expect(``)
+
+	if !nt.Failed {
+		t.Error("Expected this to fail")
+	}
+
+	want := `IC: update is disabled. enable with "-test.icupdate" flag or set the IC_UPDATE env var to anything
+`
+	if len(nt.Output) != 2 {
+		t.Fatalf("got %d elements, want 2 elements in:\n%#v", len(nt.Output), nt.Output)
+	}
+	got := nt.Output[1]
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("\n got: %q\nwant: %q", got, want)
+	}
+}
+
+func TestIC_Expect_whenEmptyLines_updatingTwice(t *testing.T) {
+	c, nt := ic.NewNullable()
+	nt.IsUpdateEnabled = true
+
+	c.Println("this will fail and update")
+	c.Expect(``)
+
+	nt.Reset()
+	c.Println("this will fail as well but not update")
+	c.Expect(``)
+
+	if !nt.Failed {
+		t.Error("Expected this to fail")
+	}
+
+	want := `IC: already updated a test file. Skipping update. Rerun tests to try again
+`
+	if len(nt.Output) != 2 {
+		t.Fatalf("got %d elements, want 2 elements in:\n%#v", len(nt.Output), nt.Output)
+	}
+	got := nt.Output[1]
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("\n got: %q\nwant: %q", got, want)
+	}
+}
+
 func TestIC_PrintVals(t *testing.T) {
 	c := ic.New(t)
 
@@ -118,13 +198,14 @@ func TestIC_PrintVals(t *testing.T) {
 	c.PrintValWithName("foo", foo)
 
 	bar := "hi\nthere"
-	c.PrintValWithName("bar", bar)
+	// Aliased as for PrintValWithName
+	c.PVwN("bar", bar)
 
 	baz := struct {
 		A float32
 		b bool
 	}{2.1, false}
-	c.PrintValWithName("baz", baz)
+	c.PVwN("baz", baz)
 
 	// Anonymous struct
 	c.PrintVals(struct{ A, ignored, B int }{1, 2, 999})
@@ -133,7 +214,8 @@ func TestIC_PrintVals(t *testing.T) {
 	type testStruct struct {
 		D, ignored, E string
 	}
-	c.PrintVals(testStruct{
+	// Aliased as for PrintVals
+	c.PV(testStruct{
 		D:       "foo",
 		ignored: "bar",
 		E:       "baz",
@@ -155,12 +237,12 @@ func TestIC_Replace(t *testing.T) {
 
 	c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
 
-	c.PrintValWithName("now", time.Now().Format(time.RFC3339))
+	c.PVwN("now", time.Now().Format(time.RFC3339))
 	c.Expect(`
 			now: "1970-01-01T00:00:00-00:00"
 			`)
 
-	c.PrintValWithName("later", time.Now().Format(time.RFC3339))
+	c.PVwN("later", time.Now().Format(time.RFC3339))
 	c.Expect(`
 			later: "1970-01-01T00:00:00-00:00"
 			`)
@@ -171,7 +253,7 @@ func TestIC_ClearReplace(t *testing.T) {
 
 	c.Replace(`foo`, "bar")
 
-	c.PrintValWithName("first", "foo-bar")
+	c.PVwN("first", "foo-bar")
 	c.Expect(`
 			first: "bar-bar"
 			`)
@@ -179,9 +261,38 @@ func TestIC_ClearReplace(t *testing.T) {
 	c.ClearReplace()
 	c.Replace(`bar`, "baz")
 
-	c.PrintValWithName("second", "foo-bar")
+	c.PVwN("second", "foo-bar")
 	c.Expect(`
 			second: "foo-baz"
 			`)
 
+}
+
+func TestIC_replaceOnEmpty_1(t *testing.T) {
+	t.Skip("example of updating the test file")
+	c := ic.New(t)
+
+	c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
+
+	c.PVwN("foo", 1)
+	c.PVwN("bar", time.Now().Format(time.RFC3339))
+
+	c.Expect(``)
+}
+
+func TestIC_replaceOnEmpty_2(t *testing.T) {
+	t.Skip("example of updating the test file")
+	t.Run("First", func(t *testing.T) {
+		c := ic.New(t)
+		c.Print("foo", 1)
+		c.Expect(``)
+	})
+	t.Run("Second", func(t *testing.T) {
+		c := ic.New(t)
+		c.Print("bar", 2)
+		c.ExpectAndContinue(``)
+
+		c.Print("baz", 2)
+		c.ExpectAndContinue(``)
+	})
 }

@@ -1,4 +1,4 @@
-module go-ic
+module github.com/BestFriendChris/go-ic
 
 go 1.19
 
