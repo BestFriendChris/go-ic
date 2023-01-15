@@ -3,6 +3,7 @@ package ic
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/pmezard/go-difflib/difflib"
@@ -82,4 +83,27 @@ func (ic *IC) expectAndLog(want string) (isSame bool) {
 	}
 	ic.Writer.Truncate(0)
 	return
+}
+
+func (ic *IC) PrintVals(val any) {
+	valType := reflect.TypeOf(val)
+	if valType.Kind() != reflect.Struct {
+		ic.t.Helper()
+		ic.t.Logf("PrintVals must be called with a struct. Got %v", valType.Kind())
+		ic.t.FailNow()
+	}
+
+	s := reflect.ValueOf(val)
+	for i := 0; i < valType.NumField(); i++ {
+		field := valType.Field(i)
+		if field.IsExported() {
+			name := field.Name
+			value := s.Field(i).Interface()
+			ic.PrintValWithName(name, value)
+		}
+	}
+}
+
+func (ic *IC) PrintValWithName(name string, val any) {
+	ic.Printf("%s: %#v\n", name, val)
 }

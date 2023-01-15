@@ -109,3 +109,42 @@ func TestIC_Expect_failWithMultipleLines(t *testing.T) {
 		t.Errorf("\ngot:\n%q\nwant:\n%q", got, want)
 	}
 }
+
+func TestIC_PrintVals(t *testing.T) {
+	c := ic.New(t)
+
+	foo := 1
+	c.PrintValWithName("foo", foo)
+
+	bar := "hi\nthere"
+	c.PrintValWithName("bar", bar)
+
+	baz := struct {
+		A float32
+		b bool
+	}{2.1, false}
+	c.PrintValWithName("baz", baz)
+
+	// Anonymous struct
+	c.PrintVals(struct{ A, ignored, B int }{1, 2, 999})
+
+	// Named struct
+	type testStruct struct {
+		D, ignored, E string
+	}
+	c.PrintVals(testStruct{
+		D:       "foo",
+		ignored: "bar",
+		E:       "baz",
+	})
+
+	c.Expect(`
+			foo: 1
+			bar: "hi\nthere"
+			baz: struct { A float32; b bool }{A:2.1, b:false}
+			A: 1
+			B: 999
+			D: "foo"
+			E: "baz"
+			`)
+}
