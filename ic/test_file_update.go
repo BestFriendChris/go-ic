@@ -4,27 +4,29 @@ import (
 	"bufio"
 	"bytes"
 	"flag"
+	"github.com/BestFriendChris/go-ic/ic/internal/infra/atomic_bool"
 	"os"
 	"runtime"
 	"strings"
-	"sync/atomic"
 )
 
 var (
-	ranUpdate     *atomic.Bool
 	updateEnabled *bool
 )
 
 func init() {
-	ranUpdate = &atomic.Bool{}
 	updateEnabled = flag.Bool("test.icupdate", false, "allow IC to update test files")
 }
 
 func NewTestFileUpdater() DefaultTestFileUpdater {
-	return DefaultTestFileUpdater{}
+	return DefaultTestFileUpdater{
+		alreadySeen: atomic_bool.NewGlobal(),
+	}
 }
 
-type DefaultTestFileUpdater struct{}
+type DefaultTestFileUpdater struct {
+	alreadySeen *atomic_bool.AtomicBool
+}
 
 func (d DefaultTestFileUpdater) UpdateEnabled() bool {
 	_, envUpdateEnabled := os.LookupEnv("IC_UPDATE")
@@ -39,7 +41,7 @@ func (d DefaultTestFileUpdater) Update(ic *IC, got string) {
 		panic("update was called incorrectly")
 	}
 
-	if ranUpdate.Swap(true) {
+	if d.alreadySeen.Set() {
 		ic.t.Log(`IC: already updated a test file. Skipping update. Rerun tests to try again`)
 		return
 	}
