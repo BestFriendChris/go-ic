@@ -106,7 +106,7 @@ func (ic *IC) logDiffIfDifferent(want string, got string) (isSame bool) {
 				FromDate: "",
 				ToFile:   "Want",
 				ToDate:   "",
-				Context:  1,
+				Context:  3,
 			})
 			ic.t.Logf("\n%s", diff)
 		} else {
