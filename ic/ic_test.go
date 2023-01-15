@@ -1,6 +1,7 @@
 package ic_test
 
 import (
+	"fmt"
 	"github.com/BestFriendChris/go-ic/ic"
 	"reflect"
 	"testing"
@@ -323,4 +324,106 @@ func TestIC_replaceOnEmpty_2(t *testing.T) {
 		c.Print("baz", 2)
 		c.ExpectAndContinue(``)
 	})
+}
+
+// Example from README.md
+func TestComplex(t *testing.T) {
+	c := ic.New(t)
+
+	_, _ = fmt.Fprintln(&c.Writer, "You can write to the Writer directly")
+
+	c.PrintValWithName("PrintValWithName", "Simplifies outputing values")
+	c.PVWN("PVWN", "is an alias for PrintValWithName")
+
+	c.PrintVals(struct{ A, B, c string }{
+		"anonymous structs",
+		"call PrintValWithName for each key",
+		"but only the exported ones",
+	})
+
+	type TestingStruct struct {
+		D, E string
+	}
+	c.PV(TestingStruct{
+		D: "Named structs work as well",
+		E: "and PV is an alias for PrintVals",
+	})
+
+	c.PrintSep()
+	c.Println("You can use PrintSep to visually distinguish sections.")
+	c.Println("PS is an alias for PrintSep")
+	c.PS()
+
+	tests := []struct {
+		Name       string
+		Have, Want int
+	}{
+		{"Adding 1 + 2", 1 + 2, 3},
+		{"Subtracting 10 - 3", 10 - 3, 7},
+	}
+	for _, test := range tests {
+		c.PV(test)
+		c.PS()
+	}
+
+	c.Println("You can also use Replace to run regexp.ReplaceAll on the input before comparison")
+	c.Println("For example, this will normalize the current time to something predictable")
+	c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
+	c.PVWN("Time", time.Now().Format(time.RFC3339))
+
+	c.PS()
+	c.Println("You can also indent the expectation string.")
+	c.Println("The shortest line (after removing the leading newline) is used to trim spaces")
+	c.PS()
+
+	c.Println("Whenever you want to update your expectation,")
+	c.Println("simply remove all content in the string and run the tests again")
+	c.Println("Only one test will be replaced at a time, so multiple runs may be required")
+	c.PS()
+
+	c.Println("Running ExpectAndContinue will call t.Fail and allow a failed test to continue")
+	c.ExpectAndContinue(`
+        You can write to the Writer directly
+        PrintValWithName: "Simplifies outputing values"
+        PVWN: "is an alias for PrintValWithName"
+        A: "anonymous structs"
+        B: "call PrintValWithName for each key"
+        TestingStruct.D: "Named structs work as well"
+        TestingStruct.E: "and PV is an alias for PrintVals"
+        --------------------------------------------------------------------------------
+        You can use PrintSep to visually distinguish sections.
+        PS is an alias for PrintSep
+        --------------------------------------------------------------------------------
+        Name: "Adding 1 + 2"
+        Have: 3
+        Want: 3
+        --------------------------------------------------------------------------------
+        Name: "Subtracting 10 - 3"
+        Have: 7
+        Want: 7
+        --------------------------------------------------------------------------------
+        You can also use Replace to run regexp.ReplaceAll on the input before comparison
+        For example, this will normalize the current time to something predictable
+        Time: "1970-01-01T00:00:00-00:00"
+        --------------------------------------------------------------------------------
+        You can also indent the expectation string.
+        The shortest line (after removing the leading newline) is used to trim spaces
+        --------------------------------------------------------------------------------
+        Whenever you want to update your expectation,
+        simply remove all content in the string and run the tests again
+        Only one test will be replaced at a time, so multiple runs may be required
+        --------------------------------------------------------------------------------
+        Running ExpectAndContinue will call t.Fail and allow a failed test to continue
+        `)
+
+	c.Println("Every time you run Expect or ExpectAndContinue, the Output is reset for more testing")
+	c.Println("Replacements are not reset by default. In order to remove all replacements, call ClearReplace")
+	c.ClearReplace()
+	c.Println("Running Expect will call t.FailNow")
+
+	c.Expect(`
+        Every time you run Expect or ExpectAndContinue, the Output is reset for more testing
+        Replacements are not reset by default. In order to remove all replacements, call ClearReplace
+        Running Expect will call t.FailNow
+        `)
 }
