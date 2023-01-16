@@ -1,39 +1,46 @@
 package ic
 
 import (
-	"bufio"
 	"bytes"
-	"flag"
-	"github.com/BestFriendChris/go-ic/ic/internal/infra/atomic_bool"
-	"os"
 	"runtime"
 	"strings"
+	"sync/atomic"
+
+	"github.com/BestFriendChris/go-ic/ic/internal/infra/atomic_bool"
+	"github.com/BestFriendChris/go-ic/ic/internal/infra/cmd"
+	"github.com/BestFriendChris/go-ic/ic/internal/infra/os_file"
 )
 
-var (
-	updateEnabled *bool
-)
-
-func init() {
-	updateEnabled = flag.Bool("test.icupdate", false, "allow IC to update test files")
-}
-
-func NewTestFileUpdater() DefaultTestFileUpdater {
-	return DefaultTestFileUpdater{
-		alreadySeen: atomic_bool.NewGlobal(),
+func NewTestFileUpdater() TestFileUpdater {
+	return TestFileUpdater{
+		alreadySeen:   atomic_bool.NewGlobal(),
+		osFileManager: os_file.New(),
+		cmd:           cmd.New(),
 	}
 }
 
-type DefaultTestFileUpdater struct {
-	alreadySeen *atomic_bool.AtomicBool
+func NewNullableTestFileUpdater(testFiles *map[string]string) (TestFileUpdater, *atomic.Bool, *cmd.OverridableFlagChecker) {
+	alreadySeen, underlyingBool := atomic_bool.NewNullable()
+	osFileManager := os_file.NewNullable(testFiles)
+	c, ofc := cmd.NewNullable()
+	return TestFileUpdater{
+		alreadySeen:   alreadySeen,
+		osFileManager: osFileManager,
+		cmd:           c,
+	}, underlyingBool, ofc
 }
 
-func (d DefaultTestFileUpdater) UpdateEnabled() bool {
-	_, envUpdateEnabled := os.LookupEnv("IC_UPDATE")
-	return *updateEnabled || envUpdateEnabled
+type TestFileUpdater struct {
+	alreadySeen   *atomic_bool.AtomicBool
+	osFileManager *os_file.OsFileManager
+	cmd           *cmd.Cmd
 }
 
-func (d DefaultTestFileUpdater) Update(ic *IC, got string) {
+func (d TestFileUpdater) UpdateEnabled() bool {
+	return d.cmd.IsUpdateEnabled()
+}
+
+func (d TestFileUpdater) Update(ic *IC, got string) {
 	ic.t.Helper()
 
 	_, fName, lineNo, ok := runtime.Caller(3)
@@ -46,14 +53,14 @@ func (d DefaultTestFileUpdater) Update(ic *IC, got string) {
 		return
 	}
 
-	file, err := os.OpenFile(fName, os.O_RDWR, 0644)
+	osFile, err := d.osFileManager.OpenRW(fName)
 	if err != nil {
 		ic.t.Log("error opening test file for update")
 		ic.t.FailNow()
 	}
-	defer func() { _ = file.Close() }()
+	defer osFile.Close()
 
-	scanner := bufio.NewScanner(file)
+	scanner := osFile.Scanner()
 
 	var sb bytes.Buffer
 	// Skip previous lines
@@ -112,6 +119,10 @@ func (d DefaultTestFileUpdater) Update(ic *IC, got string) {
 
 	ic.t.Log(`IC: Updating test file. Rerun tests to verify`)
 
-	// update the test file!
-	_, _ = file.WriteAt(sb.Bytes(), 0)
+	// rewrite the test file!
+	err = osFile.Rewrite(sb.Bytes())
+	if err != nil {
+		ic.t.Log("error writing test file on update")
+		ic.t.FailNow()
+	}
 }

@@ -6,8 +6,10 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"testing"
 
+	"github.com/BestFriendChris/go-ic/ic/internal/infra/cmd"
 	"github.com/pmezard/go-difflib/difflib"
 )
 
@@ -15,9 +17,10 @@ func New(t testing.TB) IC {
 	return IC{t: t, testFileUpdater: NewTestFileUpdater()}
 }
 
-func NewNullable() (IC, *NullTester) {
+func NewNullable(testFiles *map[string]string) (IC, *NullTester, *atomic.Bool, *cmd.OverridableFlagChecker) {
 	nt := NewNullTester()
-	return IC{t: nt, testFileUpdater: nt}, nt
+	tfu, underlyingBool, ofc := NewNullableTestFileUpdater(testFiles)
+	return IC{t: nt, testFileUpdater: tfu}, nt, underlyingBool, ofc
 }
 
 // IC is the test value runner. Create with New(*testing.TB)

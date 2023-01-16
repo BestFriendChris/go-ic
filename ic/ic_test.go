@@ -2,10 +2,15 @@ package ic_test
 
 import (
 	"fmt"
-	"github.com/BestFriendChris/go-ic/ic"
 	"reflect"
+	"runtime"
+	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/BestFriendChris/go-ic/ic"
+	"github.com/BestFriendChris/go-ic/ic/internal/infra/cmd"
 )
 
 func TestIC_Expect_simple(t *testing.T) {
@@ -40,7 +45,7 @@ func TestIC_Expect_clearOutputAfterExpect(t *testing.T) {
 }
 
 func TestIC_Expect_fail(t *testing.T) {
-	c, nt := ic.NewNullable()
+	c, nt, _, _ := newNullable()
 	c.Print("this will succeed")
 	c.Expect("this will fail")
 
@@ -65,7 +70,7 @@ want: "this will fail"`
 }
 
 func TestIC_ExpectAndContinue_fail(t *testing.T) {
-	c, nt := ic.NewNullable()
+	c, nt, _, _ := newNullable()
 	c.Print("this will succeed")
 	c.ExpectAndContinue("this will fail")
 
@@ -91,7 +96,7 @@ want: "this will fail"`
 }
 
 func TestIC_Expect_failWithMultipleLines(t *testing.T) {
-	c, nt := ic.NewNullable()
+	c, nt, _, _ := newNullable()
 	c.Println("this will")
 	c.Println("succeed")
 	c.Expect(`
@@ -122,8 +127,8 @@ func TestIC_Expect_failWithMultipleLines(t *testing.T) {
 }
 
 func TestIC_Expect_whenEmptyLines_updateEnabled(t *testing.T) {
-	c, nt := ic.NewNullable()
-	nt.IsUpdateEnabled = true
+	c, nt, _, ofc := newNullable()
+	ofc.FlagEnabled = true
 
 	c.Println("this will fail")
 	c.Expect(``)
@@ -144,8 +149,9 @@ func TestIC_Expect_whenEmptyLines_updateEnabled(t *testing.T) {
 }
 
 func TestIC_Expect_whenEmptyLines_updateDisabled(t *testing.T) {
-	c, nt := ic.NewNullable()
-	nt.IsUpdateEnabled = false
+	c, nt, _, ofc := newNullable()
+	ofc.FlagEnabled = false
+	ofc.EnvEnabled = false
 
 	c.Println("this will")
 	c.Println("fail")
@@ -167,11 +173,29 @@ func TestIC_Expect_whenEmptyLines_updateDisabled(t *testing.T) {
 }
 
 func TestIC_Expect_whenEmptyLines_updatingTwice(t *testing.T) {
-	c, nt := ic.NewNullable()
-	nt.IsUpdateEnabled = true
+	c, nt, alreadySeen, ofc := newNullable()
+	ofc.FlagEnabled = true
+
+	if alreadySeen.Load() != false {
+		t.Error("should have started not already seen")
+	}
 
 	c.Println("this will fail and update")
 	c.Expect(``)
+
+	if alreadySeen.Load() != true {
+		t.Error("now should have been already seen")
+	}
+
+	want := `IC: Updating test file. Rerun tests to verify
+`
+	if len(nt.Output) != 2 {
+		t.Fatalf("got %d elements, want 2 elements in:\n%#v", len(nt.Output), nt.Output)
+	}
+	got := nt.Output[1]
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("\n got: %q\nwant: %q", got, want)
+	}
 
 	nt.Reset()
 	c.Println("this will fail as well but not update")
@@ -181,12 +205,12 @@ func TestIC_Expect_whenEmptyLines_updatingTwice(t *testing.T) {
 		t.Error("Expected this to fail")
 	}
 
-	want := `IC: already updated a test file. Skipping update. Rerun tests to try again
+	want = `IC: already updated a test file. Skipping update. Rerun tests to try again
 `
 	if len(nt.Output) != 2 {
 		t.Fatalf("got %d elements, want 2 elements in:\n%#v", len(nt.Output), nt.Output)
 	}
-	got := nt.Output[1]
+	got = nt.Output[1]
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("\n got: %q\nwant: %q", got, want)
 	}
@@ -426,4 +450,25 @@ func TestComplex(t *testing.T) {
         Replacements are not reset by default. In order to remove all replacements, call ClearReplace
         Running Expect will call t.FailNow
         `)
+}
+
+func newNullable() (ic.IC, *ic.NullTester, *atomic.Bool, *cmd.OverridableFlagChecker) {
+	fakeFs := makeFakeFs()
+	return ic.NewNullable(&fakeFs)
+}
+
+func makeFakeFs() (fakeFs map[string]string) {
+	_, fName, lineNo, _ := runtime.Caller(0)
+
+	var sb strings.Builder
+	for i := 0; i < lineNo+10; i++ {
+		_, _ = fmt.Fprintf(&sb, "line %d: Expect(``)\n", i+1)
+	}
+
+	//fmt.Printf("the file \"%s:%d\":\n%s", fName, lineNo, sb.String())
+
+	fakeFs = map[string]string{
+		fName: sb.String(),
+	}
+	return
 }
