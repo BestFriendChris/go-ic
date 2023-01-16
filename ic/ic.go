@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/BestFriendChris/go-ic/ic/internal/infra/cmd"
+	"github.com/BestFriendChris/go-ic/ic/internal/logic/table"
 	"github.com/pmezard/go-difflib/difflib"
 )
 
@@ -86,6 +87,7 @@ func (ic *IC) expectAndLog(want string) (isSame bool) {
 		got = rp.replace(got)
 	}
 	isSame = ic.logDiffIfDifferent(want, got)
+	ic.Writer.Truncate(0)
 	if len(want) == 0 {
 		if ic.testFileUpdater.UpdateEnabled() {
 			ic.testFileUpdater.Update(ic, got)
@@ -117,8 +119,29 @@ func (ic *IC) logDiffIfDifferent(want string, got string) (isSame bool) {
 			ic.t.Logf("\n got: %q\nwant: %q", got, trimmedWant)
 		}
 	}
-	ic.Writer.Truncate(0)
 	return
+}
+
+// TT is a test table struct for PrintTable or PrintVals
+type TT[T any] struct {
+	Name       string
+	Have, Want T
+}
+
+// PT is an alias for PrintTable
+func (ic *IC) PT(val any) {
+	ic.t.Helper()
+	ic.PrintTable(val)
+}
+
+// PrintTable will take an array of structs and print a table
+func (ic *IC) PrintTable(val any) {
+	ic.t.Helper()
+	err := table.PrintTable(&ic.Writer, val)
+	if err != nil {
+		ic.t.Logf("PrintTable: %s", err)
+		ic.t.FailNow()
+	}
 }
 
 // PV is an alias for PrintVals
