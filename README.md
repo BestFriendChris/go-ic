@@ -46,21 +46,25 @@ to verify it worked
 ```go
 func TestComplex(t *testing.T) {
     c := ic.New(t)
-    
+
     c.PrintSep()
     c.Println("You can use PrintSep to visually distinguish sections.")
+    c.PS()
     c.Println("PS is an alias for PrintSep")
-    c.PS()
-    
+
+    c.PrintSection("c.PrintSection")
+    c.Println("Create a section header with PrintSection")
+
+    c.PrintSection("c.Writer")
     _, _ = fmt.Fprintln(&c.Writer, "You can write to the Writer directly")
-    
-    c.PS()
-    
+
+    c.PrintSection("c.PrintValWithName (alias c.PVWN)")
+
     c.PrintValWithName("PrintValWithName", "Simplifies outputting values")
     c.PVWN("PVWN", "is an alias for PrintValWithName")
-    
-    c.PS()
-    
+
+    c.PrintSection("c.PrintVals (alias c.PV)")
+
     c.PrintVals(struct{ A, B, c string }{
         "anonymous structs",
         "call PrintValWithName for each key",
@@ -75,15 +79,15 @@ func TestComplex(t *testing.T) {
         E: "and PV is an alias for PrintVals",
     })
 
-    c.PS()
-    
+    c.PrintSection("c.PrintTable (alias c.PT)")
+
     c.Println("You can print an array of structs as a table as well with PrintTable (or PT)")
     c.PrintTable([]TestingStruct{
         {"r1c1", "r1c2"},
         {"r2c1", "r2c2"},
     })
-    
-    c.PS()
+
+    c.PrintSection("ic.TT")
 
     c.Println("ic.TT is a pre-made struct for PrintTable and PrintVals")
     tt := []ic.TT[int]{
@@ -91,8 +95,8 @@ func TestComplex(t *testing.T) {
         {"Subtracting 10 - 3", 10 - 3, 7},
     }
     c.PT(tt)
-    
-    c.PS()
+
+    c.PrintSection("c.PrintVals with a test table")
 
     tests := []struct {
         Name       string
@@ -106,37 +110,55 @@ func TestComplex(t *testing.T) {
         c.PS()
     }
 
+    c.PrintSection("c.Replace")
+
     c.Println("You can also use Replace to run regexp.ReplaceAll on the input before comparison")
     c.Println("For example, this will normalize the current time to something predictable")
     c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
     c.PVWN("Time", time.Now().Format(time.RFC3339))
 
-    c.PS()
+    c.PrintSection("Indentation")
+
     c.Println("You can also indent the expectation string.")
     c.Println("The shortest line (after removing the leading newline) is used to trim spaces")
-    c.PS()
-    
+
+    c.PrintSection("Updating")
+
     c.Println("Whenever you want to update your expectation,")
     c.Println("simply remove all content in the string and run the tests again")
     c.Println("Only one test will be replaced at a time, so multiple runs may be required")
-    c.PS()
-    
+
+    c.PrintSection("ExpectAndContinue")
+
     c.Println("Running ExpectAndContinue will call t.Fail and allow a failed test to continue")
     c.ExpectAndContinue(`
         --------------------------------------------------------------------------------
         You can use PrintSep to visually distinguish sections.
+        --------------------------------------------------------------------------------
         PS is an alias for PrintSep
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # c.PrintSection
+        ################################################################################
+        Create a section header with PrintSection
+        ################################################################################
+        # c.Writer
+        ################################################################################
         You can write to the Writer directly
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # c.PrintValWithName (alias c.PVWN)
+        ################################################################################
         PrintValWithName: "Simplifies outputting values"
         PVWN: "is an alias for PrintValWithName"
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # c.PrintVals (alias c.PV)
+        ################################################################################
         A: "anonymous structs"
         B: "call PrintValWithName for each key"
         TestingStruct.D: "Named structs work as well"
         TestingStruct.E: "and PV is an alias for PrintVals"
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # c.PrintTable (alias c.PT)
+        ################################################################################
         You can print an array of structs as a table as well with PrintTable (or PT)
            | D    | E    |
         ---+------+------+
@@ -144,7 +166,9 @@ func TestComplex(t *testing.T) {
         ---+------+------+
          2 | r2c1 | r2c2 |
         ---+------+------+
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # ic.TT
+        ################################################################################
         ic.TT is a pre-made struct for PrintTable and PrintVals
            | Name               | Have | Want |
         ---+--------------------+------+------+
@@ -152,7 +176,9 @@ func TestComplex(t *testing.T) {
         ---+--------------------+------+------+
          2 | Subtracting 10 - 3 | 7    | 7    |
         ---+--------------------+------+------+
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # c.PrintVals with a test table
+        ################################################################################
         Name: "Adding 1 + 2"
         Have: 3
         Want: 3
@@ -161,28 +187,46 @@ func TestComplex(t *testing.T) {
         Have: 7
         Want: 7
         --------------------------------------------------------------------------------
+        ################################################################################
+        # c.Replace
+        ################################################################################
         You can also use Replace to run regexp.ReplaceAll on the input before comparison
         For example, this will normalize the current time to something predictable
         Time: "1970-01-01T00:00:00-00:00"
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # Indentation
+        ################################################################################
         You can also indent the expectation string.
         The shortest line (after removing the leading newline) is used to trim spaces
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # Updating
+        ################################################################################
         Whenever you want to update your expectation,
         simply remove all content in the string and run the tests again
         Only one test will be replaced at a time, so multiple runs may be required
-        --------------------------------------------------------------------------------
+        ################################################################################
+        # ExpectAndContinue
+        ################################################################################
         Running ExpectAndContinue will call t.Fail and allow a failed test to continue
         `)
 
     c.Println("Every time you run Expect or ExpectAndContinue, the Output is reset for more testing")
+    c.PrintSection("c.ClearReplace")
     c.Println("Replacements are not reset by default. In order to remove all replacements, call ClearReplace")
     c.ClearReplace()
+
+    c.PrintSection("c.Expect")
     c.Println("Running Expect will call t.FailNow")
-    
+
     c.Expect(`
         Every time you run Expect or ExpectAndContinue, the Output is reset for more testing
+        ################################################################################
+        # c.ClearReplace
+        ################################################################################
         Replacements are not reset by default. In order to remove all replacements, call ClearReplace
+        ################################################################################
+        # c.Expect
+        ################################################################################
         Running Expect will call t.FailNow
         `)
 }

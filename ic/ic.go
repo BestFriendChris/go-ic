@@ -193,6 +193,14 @@ func (ic *IC) PrintSep() {
 	ic.Println(separator)
 }
 
+var sectionSeparator = strings.Repeat("#", 80)
+
+func (ic *IC) PrintSection(name string) {
+	ic.Println(sectionSeparator)
+	ic.Printf("# %s\n", name)
+	ic.Println(sectionSeparator)
+}
+
 // Replace can be used to run a regexp.ReplaceAll on the output before comparison
 func (ic *IC) Replace(regex string, repl string) {
 	ic.t.Helper()
