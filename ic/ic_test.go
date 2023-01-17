@@ -246,6 +246,9 @@ func TestIC_PrintVals(t *testing.T) {
 		E:       "baz",
 	})
 
+	// If something implements Stringer, call String on the value
+	c.PVWN("testEnum", testEnumVal1)
+
 	c.Expect(`
 			foo: 1
 			bar: "hi\nthere"
@@ -254,6 +257,7 @@ func TestIC_PrintVals(t *testing.T) {
 			B: 999
 			testStruct.D: "foo"
 			testStruct.E: "baz"
+			testEnum: testEnum.testEnumVal1
 			`)
 }
 
@@ -336,23 +340,29 @@ func TestIC_PrintTable(t *testing.T) {
 	c := ic.New(t)
 	c.PrintTable(tests)
 	c.Expect(`
-		   | Name   | Have | Want |
-		---+--------+------+------+
-		 1 | 1 + 2  | 3    | 3    |
-		---+--------+------+------+
-		 2 | 10 - 3 | 7    | 7    |
-		---+--------+------+------+
+		   | Name     | Have | Want |
+		---+----------+------+------+
+		 1 | "1 + 2"  | 3    | 3    |
+		---+----------+------+------+
+		 2 | "10 - 3" | 7    | 7    |
+		---+----------+------+------+
 		`)
 
 	// PT is an alias for PrintTable
-	c.PT(tests)
+	c.PT([]struct {
+		Name string
+		TEV  testEnum
+	}{
+		{"One", testEnumVal1},
+		{"Two", testEnumVal2},
+	})
 	c.Expect(`
-		   | Name   | Have | Want |
-		---+--------+------+------+
-		 1 | 1 + 2  | 3    | 3    |
-		---+--------+------+------+
-		 2 | 10 - 3 | 7    | 7    |
-		---+--------+------+------+
+		   | Name  | TEV                   |
+		---+-------+-----------------------+
+		 1 | "One" | testEnum.testEnumVal1 |
+		---+-------+-----------------------+
+		 2 | "Two" | testEnum.testEnumVal2 |
+		---+-------+-----------------------+
 		`)
 }
 
@@ -502,22 +512,22 @@ func TestComplex(t *testing.T) {
 		# c.PrintTable (alias c.PT)
 		################################################################################
 		You can print an array of structs as a table as well with PrintTable (or PT)
-		   | D    | E    |
-		---+------+------+
-		 1 | r1c1 | r1c2 |
-		---+------+------+
-		 2 | r2c1 | r2c2 |
-		---+------+------+
+		   | D      | E      |
+		---+--------+--------+
+		 1 | "r1c1" | "r1c2" |
+		---+--------+--------+
+		 2 | "r2c1" | "r2c2" |
+		---+--------+--------+
 		################################################################################
 		# ic.TT
 		################################################################################
 		ic.TT is a pre-made struct for PrintTable and PrintVals
-		   | Name               | Have | Want |
-		---+--------------------+------+------+
-		 1 | Adding 1 + 2       | 3    | 3    |
-		---+--------------------+------+------+
-		 2 | Subtracting 10 - 3 | 7    | 7    |
-		---+--------------------+------+------+
+		   | Name                 | Have | Want |
+		---+----------------------+------+------+
+		 1 | "Adding 1 + 2"       | 3    | 3    |
+		---+----------------------+------+------+
+		 2 | "Subtracting 10 - 3" | 7    | 7    |
+		---+----------------------+------+------+
 		################################################################################
 		# c.PrintVals with a test table
 		################################################################################
@@ -586,10 +596,26 @@ func makeFakeFs() (fakeFs map[string]string) {
 		_, _ = fmt.Fprintf(&sb, "line %d: Expect(``)\n", i+1)
 	}
 
-	//fmt.Printf("the file \"%s:%d\":\n%s", fName, lineNo, sb.String())
-
 	fakeFs = map[string]string{
 		fName: sb.String(),
 	}
 	return
+}
+
+type testEnum int
+
+const (
+	testEnumVal1 testEnum = iota
+	testEnumVal2
+)
+
+func (t testEnum) String() string {
+	switch t {
+	case testEnumVal1:
+		return "testEnum.testEnumVal1"
+	case testEnumVal2:
+		return "testEnum.testEnumVal2"
+	default:
+		panic("unknown testEnum")
+	}
 }

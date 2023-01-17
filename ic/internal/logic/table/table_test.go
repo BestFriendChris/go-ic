@@ -26,12 +26,12 @@ func TestPrintTable(t *testing.T) {
 
 		got := sb.String()
 		want := `
-   | Name   | Have | Want |
----+--------+------+------+
- 1 | 1 + 2  | 3    | 3    |
----+--------+------+------+
- 2 | 10 - 3 | 7    | 7    |
----+--------+------+------+
+   | Name     | Have | Want |
+---+----------+------+------+
+ 1 | "1 + 2"  | 3    | 3    |
+---+----------+------+------+
+ 2 | "10 - 3" | 7    | 7    |
+---+----------+------+------+
 `[1:]
 		if got != want {
 			t.Errorf("\ngot:\n%swant:\n%s", got, want)
@@ -138,8 +138,8 @@ func Test_stringifyTableValues(t *testing.T) {
 		got := stringifyTableValues(reflect.ValueOf(data))
 		want := [][]string{
 			{"Name", "Have", "Want"},
-			{"One", "1", "2"},
-			{"Two", "300000", "4.123"},
+			{`"One"`, "1", "2"},
+			{`"Two"`, "300000", "4.123"},
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("\nhave: %#v\nwant: %#v", got, want)
@@ -154,7 +154,25 @@ func Test_stringifyTableValues(t *testing.T) {
 		got := stringifyTableValues(reflect.ValueOf(data))
 		want := [][]string{
 			{"Exported"},
-			{"include"},
+			{`"include"`},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("\nhave: %#v\nwant: %#v", got, want)
+		}
+	})
+	t.Run("enum values", func(t *testing.T) {
+		data := []struct {
+			Name string
+			TEV  testEnum
+		}{
+			{"One", testEnumVal1},
+			{"Two", testEnumVal2},
+		}
+		got := stringifyTableValues(reflect.ValueOf(data))
+		want := [][]string{
+			{"Name", "TEV"},
+			{`"One"`, "testEnum.testEnumVal1"},
+			{`"Two"`, "testEnum.testEnumVal2"},
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("\nhave: %#v\nwant: %#v", got, want)
@@ -334,4 +352,22 @@ func makeRowsN(n int) [][]string {
 
 func makeOutputFromRows(rows [][]string) []string {
 	return make([]string, (len(rows)*2)+2)
+}
+
+type testEnum int
+
+const (
+	testEnumVal1 testEnum = iota
+	testEnumVal2
+)
+
+func (t testEnum) String() string {
+	switch t {
+	case testEnumVal1:
+		return "testEnum.testEnumVal1"
+	case testEnumVal2:
+		return "testEnum.testEnumVal2"
+	default:
+		panic("unknown testEnum")
+	}
 }

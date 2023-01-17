@@ -14,8 +14,8 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 )
 
-func New(t testing.TB) IC {
-	return IC{t: t, testFileUpdater: NewTestFileUpdater()}
+func New(t testing.TB) *IC {
+	return &IC{t: t, testFileUpdater: NewTestFileUpdater()}
 }
 
 func NewNullable(testFiles *map[string]string) (IC, *NullTester, *atomic.Bool, *cmd.OverridableFlagChecker) {
@@ -180,7 +180,12 @@ func (ic *IC) PVWN(name string, val any) {
 
 // PrintValWithName is a simple formatter for testing values
 func (ic *IC) PrintValWithName(name string, val any) {
-	ic.Printf("%s: %#v\n", name, val)
+	// Stringify if possible
+	if stringer, ok := val.(fmt.Stringer); ok {
+		ic.Printf("%s: %s\n", name, stringer.String())
+	} else {
+		ic.Printf("%s: %#v\n", name, val)
+	}
 }
 
 func (ic *IC) PS() {

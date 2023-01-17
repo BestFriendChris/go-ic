@@ -116,7 +116,16 @@ func stringifyTableValues(slcVal reflect.Value) [][]string {
 				continue
 			}
 			value := structVal.Field(strIdx).Interface()
-			output[slcIdx+1] = append(output[slcIdx+1], fmt.Sprintf("%v", value))
+
+			// Stringify if possible
+			var nextOutput string
+			if stringer, ok := value.(fmt.Stringer); ok {
+				nextOutput = stringer.String()
+			} else {
+				nextOutput = fmt.Sprintf("%#v", value)
+			}
+
+			output[slcIdx+1] = append(output[slcIdx+1], nextOutput)
 		}
 	}
 	return output
