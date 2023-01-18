@@ -237,13 +237,13 @@ func TestIC_PrintVals(t *testing.T) {
 
 	// Named struct
 	type testStruct struct {
-		D, ignored, E string
+		D, ignored string
+		E          *string
 	}
 	// Aliased for PrintVals
 	c.PV(testStruct{
 		D:       "foo",
 		ignored: "bar",
-		E:       "baz",
 	})
 
 	// If something implements Stringer, call String on the value
@@ -256,7 +256,7 @@ func TestIC_PrintVals(t *testing.T) {
 			A: 1
 			B: 999
 			testStruct.D: "foo"
-			testStruct.E: "baz"
+			testStruct.E: 
 			testEnum: testEnum.testEnumVal1
 			`)
 }

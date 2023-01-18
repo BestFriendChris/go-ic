@@ -124,14 +124,22 @@ func stringifyTableValues(slcVal reflect.Value) [][]string {
 			if !field.IsExported() {
 				continue
 			}
-			value := structVal.Field(strIdx).Interface()
+			v := structVal.Field(strIdx)
+			if v.Kind() == reflect.Pointer {
+				v = v.Elem()
+			}
 
-			// Stringify if possible
 			var nextOutput string
-			if stringer, ok := value.(fmt.Stringer); ok {
-				nextOutput = stringer.String()
+			if !v.IsValid() {
+				nextOutput = ""
 			} else {
-				nextOutput = fmt.Sprintf("%#v", value)
+				value := v.Interface()
+				// Stringify if possible
+				if stringer, ok := value.(fmt.Stringer); ok {
+					nextOutput = stringer.String()
+				} else {
+					nextOutput = fmt.Sprintf("%#v", value)
+				}
 			}
 
 			output[slcIdx+1] = append(output[slcIdx+1], nextOutput)

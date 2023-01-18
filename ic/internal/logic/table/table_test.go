@@ -217,6 +217,25 @@ func Test_stringifyTableValues(t *testing.T) {
 			t.Errorf("\nhave: %#v\nwant: %#v", got, want)
 		}
 	})
+	t.Run("struct with pointers", func(t *testing.T) {
+		s := "foo"
+		data := []struct {
+			Name string
+			A    *string
+		}{
+			{"One", &s},
+			{"Two", nil},
+		}
+		got := stringifyTableValues(reflect.ValueOf(data))
+		want := [][]string{
+			{"Name", "A"},
+			{`"One"`, `"foo"`},
+			{`"Two"`, ""},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("\nhave: %#v\nwant: %#v", got, want)
+		}
+	})
 }
 
 func Test_stringifyTableValues_errorCases(t *testing.T) {

@@ -154,12 +154,18 @@ func (ic *IC) PV(val any) {
 func (ic *IC) PrintVals(val any) {
 	ic.t.Helper()
 	valType := reflect.TypeOf(val)
+	if valType.Kind() == reflect.Pointer {
+		valType = valType.Elem()
+	}
 	if valType.Kind() != reflect.Struct {
 		ic.t.Logf("PrintVals must be called with a struct. Got %v", valType.Kind())
 		ic.t.FailNow()
 	}
 
 	s := reflect.ValueOf(val)
+	if s.Kind() == reflect.Pointer {
+		s = s.Elem()
+	}
 	for i := 0; i < valType.NumField(); i++ {
 		field := valType.Field(i)
 		if field.IsExported() {
@@ -167,8 +173,16 @@ func (ic *IC) PrintVals(val any) {
 			if valType.Name() != "" {
 				name = fmt.Sprintf("%s.%s", valType.Name(), name)
 			}
-			value := s.Field(i).Interface()
-			ic.PrintValWithName(name, value)
+			v := s.Field(i)
+			if v.Kind() == reflect.Pointer {
+				v = v.Elem()
+			}
+			if !v.IsValid() {
+				ic.Printf("%s: \n", name)
+			} else {
+				value := v.Interface()
+				ic.PrintValWithName(name, value)
+			}
 		}
 	}
 }
