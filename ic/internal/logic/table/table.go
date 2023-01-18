@@ -13,6 +13,9 @@ func PrintTable(w io.Writer, table any) error {
 		return fmt.Errorf("must be a slice: got %s", valType.Kind())
 	}
 	elemType := valType.Elem()
+	if elemType.Kind() == reflect.Pointer {
+		elemType = elemType.Elem()
+	}
 	if elemType.Kind() != reflect.Struct {
 		return fmt.Errorf("must be a slice of structs: got slice of %s", elemType.Kind())
 	}
@@ -97,6 +100,9 @@ func stringifyTableValues(slcVal reflect.Value) [][]string {
 		panic(fmt.Sprintf("must be slice: got %s", valType.Kind()))
 	}
 	elemType := valType.Elem()
+	if elemType.Kind() == reflect.Pointer {
+		elemType = elemType.Elem()
+	}
 	if elemType.Kind() != reflect.Struct {
 		panic(fmt.Sprintf("must be slice of structs: got slice of %s", elemType.Kind()))
 	}
@@ -110,6 +116,9 @@ func stringifyTableValues(slcVal reflect.Value) [][]string {
 	}
 	for slcIdx := 0; slcIdx < slcVal.Len(); slcIdx++ {
 		structVal := slcVal.Index(slcIdx)
+		if structVal.Kind() == reflect.Pointer {
+			structVal = structVal.Elem()
+		}
 		for strIdx := 0; strIdx < structVal.NumField(); strIdx++ {
 			field := elemType.Field(strIdx)
 			if !field.IsExported() {

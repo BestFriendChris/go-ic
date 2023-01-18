@@ -15,7 +15,6 @@ type TestTable[T any] struct {
 
 func TestPrintTable(t *testing.T) {
 	t.Run("Happy Path", func(t *testing.T) {
-		//t.Skip()
 		var sb strings.Builder
 
 		tests := []TestTable[int]{
@@ -47,6 +46,31 @@ func TestPrintTable(t *testing.T) {
 		want := `
    | Name | Have | Want |
 ---+------+------+------+
+`[1:]
+		if got != want {
+			t.Errorf("\ngot:\n%swant:\n%s", got, want)
+		}
+	})
+	t.Run("Slice of pointers to structs", func(t *testing.T) {
+		var sb strings.Builder
+
+		tests := []*TestTable[int]{
+			{"1 + 2", 1 + 2, 3},
+			{"10 - 3", 10 - 3, 7},
+		}
+		err := PrintTable(&sb, tests)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		got := sb.String()
+		want := `
+   | Name     | Have | Want |
+---+----------+------+------+
+ 1 | "1 + 2"  | 3    | 3    |
+---+----------+------+------+
+ 2 | "10 - 3" | 7    | 7    |
+---+----------+------+------+
 `[1:]
 		if got != want {
 			t.Errorf("\ngot:\n%swant:\n%s", got, want)
@@ -173,6 +197,21 @@ func Test_stringifyTableValues(t *testing.T) {
 			{"Name", "TEV"},
 			{`"One"`, "testEnum.testEnumVal1"},
 			{`"Two"`, "testEnum.testEnumVal2"},
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("\nhave: %#v\nwant: %#v", got, want)
+		}
+	})
+	t.Run("Slice of pointers to structs", func(t *testing.T) {
+		data := []*TestTable[float32]{
+			{"One", 1, 2},
+			{"Two", 300000, 4.123},
+		}
+		got := stringifyTableValues(reflect.ValueOf(data))
+		want := [][]string{
+			{"Name", "Have", "Want"},
+			{`"One"`, "1", "2"},
+			{`"Two"`, "300000", "4.123"},
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("\nhave: %#v\nwant: %#v", got, want)
