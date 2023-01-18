@@ -84,10 +84,10 @@ func addRows(output *[]string, rows [][]string, widths []int) {
 }
 
 func colWithWidth(s string, width int) string {
-	if len(s) > width {
-		panic(fmt.Sprintf("%q (len %d) is shorter than width %d", s, len(s), width))
+	if len([]rune(s)) > width {
+		panic(fmt.Sprintf("%q (len %d) is shorter than width %d", s, len([]rune(s)), width))
 	}
-	return fmt.Sprintf(" %s%s |", s, strings.Repeat(" ", width-len(s)))
+	return fmt.Sprintf(" %s%s |", s, strings.Repeat(" ", width-len([]rune(s))))
 }
 
 func colSep(width int) string {
@@ -160,8 +160,8 @@ func colWidths(data [][]string) []int {
 			panic(fmt.Sprintf("bad row length; expect len(%d) got len(%d)", rowLength, len(row)))
 		}
 		for colIdx, s := range row {
-			if len(s) > widths[colIdx] {
-				widths[colIdx] = len(s)
+			if len([]rune(s)) > widths[colIdx] {
+				widths[colIdx] = len([]rune(s))
 			}
 		}
 	}

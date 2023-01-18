@@ -20,6 +20,7 @@ func TestPrintTable(t *testing.T) {
 		tests := []TestTable[int]{
 			{"1 + 2", 1 + 2, 3},
 			{"10 - 3", 10 - 3, 7},
+			{"◊ foo", 1, 2},
 		}
 		_ = PrintTable(&sb, tests)
 
@@ -30,6 +31,8 @@ func TestPrintTable(t *testing.T) {
  1 | "1 + 2"  | 3    | 3    |
 ---+----------+------+------+
  2 | "10 - 3" | 7    | 7    |
+---+----------+------+------+
+ 3 | "◊ foo"  | 1    | 2    |
 ---+----------+------+------+
 `[1:]
 		if got != want {
@@ -107,15 +110,16 @@ func TestPrintTable_errorCases(t *testing.T) {
 func Test_colWidths(t *testing.T) {
 	t.Run("happy path", func(t *testing.T) {
 		data := [][]string{
-			{"Name", "Have", "Want"},
-			{"s", "this is super long", "1"},
-			{"really long", "shorter", "2"},
+			{"Name", "Have", "Want", "◊"},
+			{"s", "this is super long", "1", ""},
+			{"really long", "shorter", "2", ""},
 		}
 		got := colWidths(data)
 		want := []int{
 			len("really long"),
 			len("this is super long"),
 			len("Want"),
+			1,
 		}
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("\nhave: %v\nwant: %v", got, want)
