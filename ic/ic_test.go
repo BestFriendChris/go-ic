@@ -35,6 +35,14 @@ func TestIC_Expect_trimInput(t *testing.T) {
 		bar`)
 }
 
+func TestIC_Expect_withBackTickInExpectation(t *testing.T) {
+	c := ic.New(t)
+	c.Print("foo\nhandle `` correctly")
+	c.Expect(`
+		foo
+		handle ` + "``" + ` correctly`)
+}
+
 func TestIC_Expect_clearOutputAfterExpect(t *testing.T) {
 	c := ic.New(t)
 	c.Print("foo")

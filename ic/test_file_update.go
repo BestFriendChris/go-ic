@@ -106,6 +106,7 @@ func (d TestFileUpdater) Update(ic *IC, got string) {
 		// update as multiline
 		sb.WriteString("\n")
 	}
+	got = strings.ReplaceAll(got, "`", "` + \"`\" + `")
 	sb.WriteString(got)
 	sb.WriteString("`")
 
