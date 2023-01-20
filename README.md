@@ -52,17 +52,21 @@ func TestComplex(t *testing.T) {
     c.PS()
     c.Println("PS is an alias for PrintSep")
 
+    c.Println()
     c.PrintSection("c.PrintSection")
     c.Println("Create a section header with PrintSection")
 
+    c.Println()
     c.PrintSection("c.Writer")
     _, _ = fmt.Fprintln(&c.Writer, "You can write to the Writer directly")
 
+    c.Println()
     c.PrintSection("c.PrintValWithName (alias c.PVWN)")
 
     c.PrintValWithName("PrintValWithName", "Simplifies outputting values")
     c.PVWN("PVWN", "is an alias for PrintValWithName")
 
+    c.Println()
     c.PrintSection("c.PrintVals (alias c.PV)")
 
     c.PrintVals(struct{ A, B, c string }{
@@ -79,6 +83,7 @@ func TestComplex(t *testing.T) {
         E: "and PV is an alias for PrintVals",
     })
 
+    c.Println()
     c.PrintSection("c.PrintTable (alias c.PT)")
 
     c.Println("You can print an array of structs as a table as well with PrintTable (or PT)")
@@ -87,6 +92,7 @@ func TestComplex(t *testing.T) {
         {"r2c1", "r2c2"},
     })
 
+    c.Println()
     c.PrintSection("ic.TT")
 
     c.Println("ic.TT is a pre-made struct for PrintTable and PrintVals")
@@ -96,6 +102,7 @@ func TestComplex(t *testing.T) {
     }
     c.PT(tt)
 
+    c.Println()
     c.PrintSection("c.PrintVals with a test table")
 
     tests := []struct {
@@ -110,6 +117,7 @@ func TestComplex(t *testing.T) {
         c.PS()
     }
 
+    c.Println()
     c.PrintSection("c.Replace")
 
     c.Println("You can also use Replace to run regexp.ReplaceAll on the input before comparison")
@@ -117,17 +125,20 @@ func TestComplex(t *testing.T) {
     c.Replace(`\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d-\d\d:\d\d`, "1970-01-01T00:00:00-00:00")
     c.PVWN("Time", time.Now().Format(time.RFC3339))
 
+    c.Println()
     c.PrintSection("Indentation")
 
     c.Println("You can also indent the expectation string.")
     c.Println("The shortest line (after removing the leading newline) is used to trim spaces")
 
+    c.Println()
     c.PrintSection("Updating")
 
     c.Println("Whenever you want to update your expectation,")
     c.Println("simply remove all content in the string and run the tests again")
     c.Println("Only one test will be replaced at a time, so multiple runs may be required")
 
+    c.Println()
     c.PrintSection("ExpectAndContinue")
 
     c.Println("Running ExpectAndContinue will call t.Fail and allow a failed test to continue")
@@ -136,19 +147,23 @@ func TestComplex(t *testing.T) {
         You can use PrintSep to visually distinguish sections.
         --------------------------------------------------------------------------------
         PS is an alias for PrintSep
+        
         ################################################################################
         # c.PrintSection
         ################################################################################
         Create a section header with PrintSection
+        
         ################################################################################
         # c.Writer
         ################################################################################
         You can write to the Writer directly
+        
         ################################################################################
         # c.PrintValWithName (alias c.PVWN)
         ################################################################################
         PrintValWithName: "Simplifies outputting values"
         PVWN: "is an alias for PrintValWithName"
+        
         ################################################################################
         # c.PrintVals (alias c.PV)
         ################################################################################
@@ -156,6 +171,7 @@ func TestComplex(t *testing.T) {
         B: "call PrintValWithName for each key"
         TestingStruct.D: "Named structs work as well"
         TestingStruct.E: "and PV is an alias for PrintVals"
+        
         ################################################################################
         # c.PrintTable (alias c.PT)
         ################################################################################
@@ -166,6 +182,7 @@ func TestComplex(t *testing.T) {
         ---+--------+--------+
          2 | "r2c1" | "r2c2" |
         ---+--------+--------+
+        
         ################################################################################
         # ic.TT
         ################################################################################
@@ -176,6 +193,7 @@ func TestComplex(t *testing.T) {
         ---+----------------------+------+------+
          2 | "Subtracting 10 - 3" | 7    | 7    |
         ---+----------------------+------+------+
+        
         ################################################################################
         # c.PrintVals with a test table
         ################################################################################
@@ -187,23 +205,27 @@ func TestComplex(t *testing.T) {
         Have: 7
         Want: 7
         --------------------------------------------------------------------------------
+        
         ################################################################################
         # c.Replace
         ################################################################################
         You can also use Replace to run regexp.ReplaceAll on the input before comparison
         For example, this will normalize the current time to something predictable
         Time: "1970-01-01T00:00:00-00:00"
+        
         ################################################################################
         # Indentation
         ################################################################################
         You can also indent the expectation string.
         The shortest line (after removing the leading newline) is used to trim spaces
+        
         ################################################################################
         # Updating
         ################################################################################
         Whenever you want to update your expectation,
         simply remove all content in the string and run the tests again
         Only one test will be replaced at a time, so multiple runs may be required
+        
         ################################################################################
         # ExpectAndContinue
         ################################################################################
@@ -211,19 +233,23 @@ func TestComplex(t *testing.T) {
         `)
 
     c.Println("Every time you run Expect or ExpectAndContinue, the Output is reset for more testing")
+    c.Println()
     c.PrintSection("c.ClearReplace")
     c.Println("Replacements are not reset by default. In order to remove all replacements, call ClearReplace")
     c.ClearReplace()
 
+    c.Println()
     c.PrintSection("c.Expect")
     c.Println("Running Expect will call t.FailNow")
 
     c.Expect(`
         Every time you run Expect or ExpectAndContinue, the Output is reset for more testing
+        
         ################################################################################
         # c.ClearReplace
         ################################################################################
         Replacements are not reset by default. In order to remove all replacements, call ClearReplace
+        
         ################################################################################
         # c.Expect
         ################################################################################
