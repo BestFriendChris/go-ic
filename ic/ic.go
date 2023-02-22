@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/BestFriendChris/go-ic/ic/internal/infra/cmd"
-	"github.com/BestFriendChris/go-ic/ic/internal/logic/table"
 	"github.com/pmezard/go-difflib/difflib"
 )
 
@@ -137,7 +136,7 @@ func (ic *IC) PT(val any) {
 // PrintTable will take an array of structs and print a table
 func (ic *IC) PrintTable(val any) {
 	ic.t.Helper()
-	err := table.PrintTable(&ic.Writer, val)
+	err := PrintTable(&ic.Writer, val)
 	if err != nil {
 		ic.t.Logf("PrintTable: %s", err)
 		ic.t.FailNow()
@@ -194,12 +193,7 @@ func (ic *IC) PVWN(name string, val any) {
 
 // PrintValWithName is a simple formatter for testing values
 func (ic *IC) PrintValWithName(name string, val any) {
-	// Stringify if possible
-	if stringer, ok := val.(fmt.Stringer); ok {
-		ic.Printf("%s: %s\n", name, stringer.String())
-	} else {
-		ic.Printf("%s: %#v\n", name, val)
-	}
+	ic.Printf("%s: %s\n", name, DebugWrap(val).DebugString())
 }
 
 func (ic *IC) PS() {
@@ -215,8 +209,12 @@ func (ic *IC) PrintSep() {
 var sectionSeparator = strings.Repeat("#", 80)
 
 func (ic *IC) PrintSection(name string) {
+	ic.PrintfSection("%s", name)
+}
+
+func (ic *IC) PrintfSection(format string, a ...any) {
 	ic.Println(sectionSeparator)
-	ic.Printf("# %s\n", name)
+	ic.Printf("# "+format+"\n", a...)
 	ic.Println(sectionSeparator)
 }
 

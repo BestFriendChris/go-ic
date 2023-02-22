@@ -1,4 +1,4 @@
-package table
+package ic
 
 import (
 	"fmt"
@@ -134,12 +134,7 @@ func stringifyTableValues(slcVal reflect.Value) [][]string {
 				nextOutput = ""
 			} else {
 				value := v.Interface()
-				// Stringify if possible
-				if stringer, ok := value.(fmt.Stringer); ok {
-					nextOutput = stringer.String()
-				} else {
-					nextOutput = fmt.Sprintf("%#v", value)
-				}
+				nextOutput = DebugWrap(value).DebugString()
 			}
 
 			output[slcIdx+1] = append(output[slcIdx+1], nextOutput)

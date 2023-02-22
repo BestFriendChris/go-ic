@@ -9,3 +9,9 @@ type Tester interface {
 	Logf(format string, args ...any)
 	Helper()
 }
+
+// DebugStringer allows for exactly defining the debug string
+// used in tests.
+type DebugStringer interface {
+	DebugString() string
+}
