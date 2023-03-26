@@ -40,7 +40,7 @@ func TestIC_Expect_withBackTickInExpectation(t *testing.T) {
 	c.Print("foo\nhandle `` correctly")
 	c.Expect(`
 		foo
-		handle ` + "``" + ` correctly`)
+		handle ` + "`" + `` + "`" + ` correctly`)
 }
 
 func TestIC_Expect_clearOutputAfterExpect(t *testing.T) {
@@ -258,15 +258,15 @@ func TestIC_PrintVals(t *testing.T) {
 	c.PVWN("testEnum", testEnumVal1)
 
 	c.Expect(`
-			foo: 1
-			bar: "hi\nthere"
-			baz: struct { A float32; b bool }{A:2.1, b:false}
-			A: 1
-			B: 999
-			testStruct.D: "foo"
-			testStruct.E: 
-			testEnum: testEnum.testEnumVal1
-			`)
+		foo: 1
+		bar: "hi\nthere"
+		baz: struct { A float32; b bool }{A:2.1, b:false}
+		A: 1
+		B: 999
+		testStruct.D: "foo"
+		testStruct.E: 
+		testEnum: testEnum.testEnumVal1
+		`)
 }
 
 func TestIC_Replace(t *testing.T) {
@@ -276,13 +276,13 @@ func TestIC_Replace(t *testing.T) {
 
 	c.PVWN("now", time.Now().Format(time.RFC3339))
 	c.Expect(`
-			now: "1970-01-01T00:00:00-00:00"
-			`)
+		now: "1970-01-01T00:00:00-00:00"
+		`)
 
 	c.PVWN("later", time.Now().Format(time.RFC3339))
 	c.Expect(`
-			later: "1970-01-01T00:00:00-00:00"
-			`)
+		later: "1970-01-01T00:00:00-00:00"
+		`)
 }
 
 func TestIC_ClearReplace(t *testing.T) {
@@ -292,16 +292,16 @@ func TestIC_ClearReplace(t *testing.T) {
 
 	c.PVWN("first", "foo-bar")
 	c.Expect(`
-			first: "bar-bar"
-			`)
+		first: "bar-bar"
+		`)
 
 	c.ClearReplace()
 	c.Replace(`bar`, "baz")
 
 	c.PVWN("second", "foo-bar")
 	c.Expect(`
-			second: "foo-baz"
-			`)
+		second: "foo-baz"
+		`)
 
 }
 

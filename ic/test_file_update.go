@@ -79,9 +79,11 @@ func (d TestFileUpdater) Update(ic *IC, got string) {
 		sb.WriteString(line + "\n")
 	}
 
-	idx := strings.Index(line, "Expect")
+	var numTabs int
+	idx := strings.Index(line, "Expect(")
 	// This is the line with Expect on it
 	if idx > -1 {
+		numTabs = strings.Count(line[:idx], "\t")
 		// We need to write everything up to the '('
 		sb.WriteString(line[:idx])
 		line = line[idx:]
@@ -102,12 +104,19 @@ func (d TestFileUpdater) Update(ic *IC, got string) {
 	}
 
 	sb.WriteString("`")
-	if strings.Index(got, "\n") >= 0 {
+	isMultiline := strings.Index(got, "\n") >= 0
+	if isMultiline {
 		// update as multiline
 		sb.WriteString("\n")
 	}
 	got = strings.ReplaceAll(got, "`", "` + \"`\" + `")
-	sb.WriteString(got)
+	if isMultiline && numTabs > 0 {
+		prefixTabs := strings.Repeat("\t", numTabs+1)
+		sb.WriteString(prefixTabs)
+		sb.WriteString(strings.ReplaceAll(got, "\n", "\n"+prefixTabs))
+	} else {
+		sb.WriteString(got)
+	}
 	sb.WriteString("`")
 
 	// write out the rest of the line skipping the empty quotes
